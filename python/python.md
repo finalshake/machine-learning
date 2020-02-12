@@ -37,4 +37,81 @@ list(range(1,11))     #不包括11
 [m + n for m in 'ABC' for n in 'XYZ']   #列出['AX', 'AY', 'AZ', 'BX', 'BY', 'BZ', 'CX', 'CY', 'CZ']
 ```
 #### 生成器
+python在生成list或tuple时，如果包含元素很多，可以不用一次全部生成，而是迭代到哪生成到哪。
+有两种生产方法：
+1. 直接在列表生成式中，将［］改为（）
+```
+l = [x * x for x in range(10000)]   #一次性生成
+g = (x * x for x in range(10000))   #使用生成器generator
+next(g)                             #单步迭代，一次输出一个元素，输出0
+next(g)                             #输出1
+...
+...
+next(g)                             #最后一次迭代会抛出StopIteration错误
 
+for n in g:
+    pass                            #也可以用for循环迭代generator
+```
+2. 使用关键字**yield**返回结果
+```
+#拿生成Fibonacci数列举例，首先是正常列表生成式写出的函数
+def l_fib(x):
+    n, a, b = 0, 0, 1
+    while n < x:
+      print(b)
+      n += 1
+      a, b = b, a + b
+    return 'done'
+
+#其次是生成器写的fib
+def g_fib(x):
+    n, a, b = 0, 0, 1
+    while n < x:
+      yield b
+      n += 1
+      a, b = b, a+b
+    return 'done'
+
+#g_fib需要这样使用
+f = g_fib(6)
+next(f)
+for n in g_fib(6):                    #或者for迭代
+  print(n)                            #但是用for循环调用generator时，发现拿不到generator的return语句的返回值。
+                                      #如果想要拿到返回值，必须捕获StopIteration错误，返回值包含在StopIteration的value中
+```
+
+#### 迭代器
+可以被next()函数调用并不断返回下一个值的对象称为*迭代器*：*Iterator*
+for循环可以迭代list，tuple，dict，set，str以及generator，这些可用for循环迭代的对象成为可迭代对象：*Iterable*
+
+判断对象是否可迭代Iterable：
+```
+from collections import Iterable
+isinstance([],m Iterable)             #返回True
+```
+判断对象是否是迭代器Iterator：
+```
+from collections import Iterator
+isinstance(g, Iterator)               #返回True
+```
+Python的Iterator对象表示的是一个数据流，Iterator对象可以被next()函数调用并不断返回下一个数据，直到没有数据时抛出StopIteration错误。可以把这个数据流看做是一个有序序列，但我们却不能提前知道序列的长度，只能不断通过next()函数实现按需计算下一个数据，所以Iterator的计算是惰性的，只有在需要返回下一个数据时它才会计算。
+
+Iterator甚至可以表示一个无限大的数据流，例如全体自然数。而使用list是永远不可能存储全体自然数的。
+
+Python的for循环本质上就是通过不断调用next()函数实现的：
+```
+for x in [1, 2, 3, 4, 5]:
+    pass
+#等价于
+# 首先获得Iterator对象:
+it = iter([1, 2, 3, 4, 5])
+# 循环:
+while True:
+    try:
+        # 获得下一个值:
+        x = next(it)
+    except StopIteration:
+        # 遇到StopIteration就退出循环
+        break
+
+```
