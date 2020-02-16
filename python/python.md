@@ -115,3 +115,100 @@ while True:
         break
 
 ```
+
+### 函数式编程
+#### 高阶函数
+***map/reduce***
+
+python中的函数可以作为函数的参数和返回值，能被赋值给一个变量。
+```
+f = abs(-10)              #f是10
+f = abs                   #f是abs函数，可以用f(-10)
+abs = 10                  #此时调用abs(-10)会报错，因为abs已经被改为值是10的变量
+```
+
+map()函数：接受两个参数，一个是函数，一个是Iterable（例如list）
+
+map将函数依次作用在Iterable的每个元素上，把结果以Iterator形式返回。
+```
+list(map(str, [1, 2, 3, 4, 5, 6, 7, 8, 9]))     #将list中的数字转换为字符串，返回['1', '2', '3', '4', '5', '6', '7', '8', '9']
+```
+
+reduce()函数：接受一个函数和一个序列，但接受的函数必须有两个参数
+```
+from functools import reduce
+reduce(f, [x1, x2, x3, x4]) = f(f(f(x1, x2), x3), x4)
+```
+***filter***
+
+filter()函数即过滤筛选函数，接受一个函数和一个序列，函数的返回值是True或False，根据返回值的真假依次决定序列元素的去留。
+```
+#删除序列中的空字符
+def not_empty(s):
+    return s and s.strip()
+list(filter(not_empty, ['a', '', 'b', ' ', None]))
+#返回['a', 'b']
+```
+***sorted***
+
+sorted()函数,即排序函数，接受一个序列，也可一带一个函数来表明排序条件。
+```
+sorted([36, 5, -12, 9, -21])                        #返回[-21, -12, 5, 9, 36]
+sorted([36, 5, -12, 9, -21], key = abs)             #返回[5, 9, -12, -21, 36]
+sorted([36, 5, -12, 9, -21], reverse=True)          
+#key接受的函数先作用于前面的list或dict等，形成新的序列，然后再用sorted排序
+```
+#### 返回函数
+返回函数即将一个函数名作为函数的返回值。
+```
+def lazy_sum(*args):
+  def add():
+    sum = 0
+    for n in args:
+      sum += n
+    return sum
+  return add
+#调用lazy_sum()时，返回的不是求和结果，而是函数add（）
+f = lazy_sum(1, 3, 5, 7)
+#调用f时，才计算结果
+f()                                                 #返回16
+
+
+f1 = lazy_sum(1, 3, 5, 7)
+f1 == f                                             #返回False, lazy_sum每次调用都返回新函数
+```
+当函数返回一个函数时，相关参数和变量都保存在返回的函数中，这种程序结构称为*闭包(Closure)*
+
+返回闭包时牢记一点：返回函数不要引用任何循环变量，或者后续会发生变化的变量。
+
+#### 匿名函数
+用关键字***lambda***定义的函数，可以不用函数名，后续也不会重复使用，缩短程序结构。
+```
+def add(x, y):
+  return x + y
+#等价于
+lambda x, y: x + y
+```
+
+#### 装饰器decorator
+装饰器是一种特殊的返回函数。一般情况下，如果想在其他函数执行时记录时间或者log，又不想重新在原来函数内部增加东西破坏结构，
+就需要用到装饰器。
+```
+#用法
+@log
+def some_func():
+  pass
+#some_func执行时就会相当于执行 some_func = log(some_func)
+```
+装饰器的写法见示例[decorator.py](./decorator.py) 
+
+注意：functools模块下的@functools.wraps()函数是为了保证使用装饰器后，some_func()的__name__属性不会变成装饰器返回的函数的__name__。
+
+#### 偏函数
+functools.partial(), 接受两个参数，一个是正常函数，一个是正常函数中的一个参数值，它将正常函数中的一个参数值固定，形成新的函数返回。
+```
+import functools
+max(5, 6, 7)                                            #返回最大7
+max2 = functools.partial(max, 10)                         
+max2(5, 6, 7)                                           #相当于max(10, 5, 6, 7), 最后返回10
+```
