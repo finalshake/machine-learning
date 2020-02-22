@@ -212,3 +212,187 @@ max(5, 6, 7)                                            #返回最大7
 max2 = functools.partial(max, 10)                         
 max2(5, 6, 7)                                           #相当于max(10, 5, 6, 7), 最后返回10
 ```
+### 面向对象
+#### 继承和多态
+封装、继承和多态是面向对象的三大特性。
+
+多态：发生条件是1.子类继承父类，2.子类重写父类的一个方法，3.编写函数接受父类为参数，并使用父类的方法，4.使用函数时传入子类实例，
+则函数执行的是子类的重写方法。
+
+对静态语言如java c++来说必须严格按以上条件发生多态，必须有继承发生。而对动态语言如python，不一定传入父类的子类，只需传入对象有同名的方法就可以。
+
+#### __slots__
+python作为动态语言，允许在class生成实例后再动态对实例绑定属性。
+
+如果不想类的实例在使用时被随便绑定属性,可以在类定义中用__slots__限定
+之后该类实例能添加的属性。
+```
+class Students(object):
+  __slots__ = ('name', 'age')                           #Students类的实例只能有name和age两个属性了
+```
+但是对Students的子类，父类的__slots__不起作用，除非子类中也定义__slots__，这样子类允许定义的属性就包括了自身的__slots__和父类的__slots__。
+#### @property 
+相当于为类中的属性变量赋值重构了一个=运算符。
+```
+class Students(object):
+  def get_score(self):
+    return self._score
+
+  def set_score(self, value):
+    if not isinstance(value, int):
+      raise ValueError('score must be an integer!')
+    if value < 0 or value > 100:
+      raise ValueError('score must between 0 ~ 100!')
+    self._score = value
+
+
+#实例化Students类，调用get_score 和 set_score设置分数
+s = Students()
+s.set_score(60)
+s.get_score()
+
+#但是每次调用方法麻烦，想直接用=赋值，用s.score得到值，就要用到@property
+class Students(object):
+  @property
+  def score(self):
+    return self._score
+
+  @score.setter
+  def score(self, value):
+    if not isinstance(value, int):
+      raise ValueError('score must be an integer!')
+    if value < 0 or value > 100:
+      raise ValueError('score must between 0 ~ 100!')
+    self._score = value
+#这样就可以直接用=了
+s = Students()
+s.score = 60
+print(s.score)
+
+#也可以不写@score.setter，这样s.score就成了只读属性了
+```
+#### 多重继承
+不同于java一类的静态语言，python可以实现多重继承。
+
+所谓多重继承就是子类可以继承多个父类。
+***MixIn***就是设计一个类，继承一个主线，其他多继承的父类可以添加其他功能，以MixIn结尾。比如：
+```
+class MyTCPServer(TCPServer, ThreadingMixIn):
+  pass                                                      #编写TCP服务，但加入了多线程模式
+```
+#### 定制类
+***\_\_len__()***
+
+\_\_len__()方法能让len()函数调用这个class，\_\_len__()方法里面要返回class的长度。
+
+***\_\_str__()***
+
+使用该方法，可以让print（class）时打印出__str__()内返回的内容。
+```
+class Students():
+  def __init__(self, name):
+    self.name = name
+print(Students('Mark'))
+#只会返回一个类似<__main__.Student object at 0x109afb190>的结果
+
+#使用__str__后
+class Students():
+  def __init__(self, name):
+    self.name = name
+  def __str__(self):
+    return 'Students object (name: %s)' %(self.name)
+print(Students('Mark'))
+#返回Students object (name: Mark)
+```
+***\_\_iter__()***
+
+在类中加入\_\_iter__()方法，可以使用for循环迭代类，它返回一个可迭代对象。for循环会根据该对象的\_\_next__()方法循环到下一个值，直到遇到Stopteration错误。
+```
+#实现Fib类
+class Fib(object):
+  def __init__(self):
+    self.a, self.b = 0, 1
+  def __iter__(self):
+    return self
+  def __next__(self):
+    self.a, self.b = self.b, self.a + self.b
+    if self.a > 10000000:
+      raise StopIteration()
+    return self.a
+
+for n in Fib():
+  print(n)
+```
+***\_\_getitem__***
+
+在类中使用\_\_getitem__方法，可以将实现类似list或dict一样的下标读取内容的功能。
+```
+#上面的Fib()没有f[5]取第5个元素的功能，下面用__getitem__实现
+class Fib(object):
+  def __getitem__(self, n):
+    if isinstance(n, int):                    #n是索引
+      a, b = 1, 1
+      for x in range(n):
+        a, b = b, a + b
+      return a
+    if isinstance(n, slice):                  #n是切片
+      start = n.start
+      stop = n.stop
+      if start is None:
+        start = 0
+      a, b = 1, 1
+      L = []
+      for x in range(stop):
+        if x >= start:
+          L.append(a)
+        a, b = b, a + b
+      return L
+```
+***\_\_getattr__***
+
+\_\_getattr__方法可以定制类中没有的属性一旦被访问时的应对方法。
+```
+#比如Students类中只定义了name属性，而没有score属性，一旦score属性被访问，就会报错
+class Students(object):
+  def __init__(self, name):
+    self.name = name
+
+s = Students('Mark')
+print(s.name)
+print(s.score)                              #会报错
+
+#这时可以用__getattr__方法定制
+class Students(object):
+  def __init__(self, name):
+    self.name = name
+  def __getattr__(self, attr):
+    if attr == 'score':
+      return 60
+#只有当score属性不存在时，才会通过__getattr__查找返回
+#一旦使用了__getattr__，没有的属性都会在其中查找，如果__getattr__中也没有，则不会报错，而是返回None
+#如果想报错，则需在__getattr__中加上错误信息
+class Students(object):
+  def __init__(self, name):
+    self.name = name
+  def __getattr__(self, attr):
+    if attr == 'score':
+      return 60
+    raise AttributeError('\'Students\' object has no attribute \'%s\'' %attr)
+
+#__getattr__也可以返回函数
+```
+常见用法见[getattr.py](./getattr.py)
+
+***\_\_call__***
+
+\_\_call__可将实例名直接当成函数方法调用。
+```
+class Students(object):
+  def __init__(self, name):
+    self.__name = name
+  def __call__(self, score = 60):
+    print('My name is %s, score is %d.' %(self.__name, score))
+
+s = Students('Mark')
+s(90)
+```
