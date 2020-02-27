@@ -1,7 +1,7 @@
 ### 高级特性
 #### 切片
 list或tuple中可以使用':'
-```
+```python
   l[3:6]          #that is l[3] l[4] l[5]
   l[:6]           #that is l[0] to l[5]
   l[-1]           #the last one
@@ -10,7 +10,7 @@ list或tuple中可以使用':'
 ```
 #### 迭代
 python 的for循环可以使用 for in 作用于list,tuple,dict
-```
+```python
 >>> d = {'a': 1, 'b': 2, 'c': 3}
 >>> for k in d:
 ...     print(k)
@@ -19,20 +19,20 @@ a
 c
 b
 ```
-```
+```python
 >>>for v in d.values():
 ...     pass
 ```
-```
+```python
 >>>for k, v in d.items():
 ...     pass
 ```
 #### 列表生成式
 生成list ［1-10] 可使用：
-```
+```python
 list(range(1,11))     #不包括11
 ```
-```
+```python
 [x * x for x in range(1, 11)]   #生成[1*1, 2*2, ... , 10*10]
 [m + n for m in 'ABC' for n in 'XYZ']   #列出['AX', 'AY', 'AZ', 'BX', 'BY', 'BZ', 'CX', 'CY', 'CZ']
 ```
@@ -40,7 +40,7 @@ list(range(1,11))     #不包括11
 python在生成list或tuple时，如果包含元素很多，可以不用一次全部生成，而是迭代到哪生成到哪。
 有两种生产方法：
 1. 直接在列表生成式中，将［］改为（）
-```
+```python
 l = [x * x for x in range(10000)]   #一次性生成
 g = (x * x for x in range(10000))   #使用生成器generator
 next(g)                             #单步迭代，一次输出一个元素，输出0
@@ -53,7 +53,7 @@ for n in g:
     pass                            #也可以用for循环迭代generator
 ```
 2. 使用关键字**yield**返回结果
-```
+```python
 #拿生成Fibonacci数列举例，首先是正常列表生成式写出的函数
 def l_fib(x):
     n, a, b = 0, 0, 1
@@ -85,12 +85,12 @@ for n in g_fib(6):                    #或者for迭代
 for循环可以迭代list，tuple，dict，set，str以及generator，这些可用for循环迭代的对象成为可迭代对象：*Iterable*
 
 判断对象是否可迭代Iterable：
-```
+```python
 from collections import Iterable
 isinstance([],m Iterable)             #返回True
 ```
 判断对象是否是迭代器Iterator：
-```
+```python
 from collections import Iterator
 isinstance(g, Iterator)               #返回True
 ```
@@ -99,7 +99,7 @@ Python的Iterator对象表示的是一个数据流，Iterator对象可以被next
 Iterator甚至可以表示一个无限大的数据流，例如全体自然数。而使用list是永远不可能存储全体自然数的。
 
 Python的for循环本质上就是通过不断调用next()函数实现的：
-```
+```python
 for x in [1, 2, 3, 4, 5]:
     pass
 #等价于
@@ -121,7 +121,7 @@ while True:
 ***map/reduce***
 
 python中的函数可以作为函数的参数和返回值，能被赋值给一个变量。
-```
+```python
 f = abs(-10)              #f是10
 f = abs                   #f是abs函数，可以用f(-10)
 abs = 10                  #此时调用abs(-10)会报错，因为abs已经被改为值是10的变量
@@ -130,19 +130,19 @@ abs = 10                  #此时调用abs(-10)会报错，因为abs已经被改
 map()函数：接受两个参数，一个是函数，一个是Iterable（例如list）
 
 map将函数依次作用在Iterable的每个元素上，把结果以Iterator形式返回。
-```
+```python
 list(map(str, [1, 2, 3, 4, 5, 6, 7, 8, 9]))     #将list中的数字转换为字符串，返回['1', '2', '3', '4', '5', '6', '7', '8', '9']
 ```
 
 reduce()函数：接受一个函数和一个序列，但接受的函数必须有两个参数
-```
+```python
 from functools import reduce
 reduce(f, [x1, x2, x3, x4]) = f(f(f(x1, x2), x3), x4)
 ```
 ***filter***
 
 filter()函数即过滤筛选函数，接受一个函数和一个序列，函数的返回值是True或False，根据返回值的真假依次决定序列元素的去留。
-```
+```python
 #删除序列中的空字符
 def not_empty(s):
     return s and s.strip()
@@ -152,7 +152,7 @@ list(filter(not_empty, ['a', '', 'b', ' ', None]))
 ***sorted***
 
 sorted()函数,即排序函数，接受一个序列，也可一带一个函数来表明排序条件。
-```
+```python
 sorted([36, 5, -12, 9, -21])                        #返回[-21, -12, 5, 9, 36]
 sorted([36, 5, -12, 9, -21], key = abs)             #返回[5, 9, -12, -21, 36]
 sorted([36, 5, -12, 9, -21], reverse=True)          
@@ -160,7 +160,7 @@ sorted([36, 5, -12, 9, -21], reverse=True)
 ```
 #### 返回函数
 返回函数即将一个函数名作为函数的返回值。
-```
+```python
 def lazy_sum(*args):
   def add():
     sum = 0
@@ -183,7 +183,7 @@ f1 == f                                             #返回False, lazy_sum每次
 
 #### 匿名函数
 用关键字***lambda***定义的函数，可以不用函数名，后续也不会重复使用，缩短程序结构。
-```
+```python
 def add(x, y):
   return x + y
 #等价于
@@ -193,7 +193,7 @@ lambda x, y: x + y
 #### 装饰器decorator
 装饰器是一种特殊的返回函数。一般情况下，如果想在其他函数执行时记录时间或者log，又不想重新在原来函数内部增加东西破坏结构，
 就需要用到装饰器。
-```
+```python
 #用法
 @log
 def some_func():
@@ -206,7 +206,7 @@ def some_func():
 
 #### 偏函数
 functools.partial(), 接受两个参数，一个是正常函数，一个是正常函数中的一个参数值，它将正常函数中的一个参数值固定，形成新的函数返回。
-```
+```python
 import functools
 max(5, 6, 7)                                            #返回最大7
 max2 = functools.partial(max, 10)                         
@@ -226,14 +226,14 @@ python作为动态语言，允许在class生成实例后再动态对实例绑定
 
 如果不想类的实例在使用时被随便绑定属性,可以在类定义中用__slots__限定
 之后该类实例能添加的属性。
-```
+```python
 class Students(object):
   __slots__ = ('name', 'age')                           #Students类的实例只能有name和age两个属性了
 ```
 但是对Students的子类，父类的__slots__不起作用，除非子类中也定义__slots__，这样子类允许定义的属性就包括了自身的__slots__和父类的__slots__。
 #### @property 
 相当于为类中的属性变量赋值重构了一个=运算符。
-```
+```python
 class Students(object):
   def get_score(self):
     return self._score
@@ -276,7 +276,7 @@ print(s.score)
 
 所谓多重继承就是子类可以继承多个父类。
 ***MixIn***就是设计一个类，继承一个主线，其他多继承的父类可以添加其他功能，以MixIn结尾。比如：
-```
+```python
 class MyTCPServer(TCPServer, ThreadingMixIn):
   pass                                                      #编写TCP服务，但加入了多线程模式
 ```
@@ -288,7 +288,7 @@ class MyTCPServer(TCPServer, ThreadingMixIn):
 ***\_\_str__()***
 
 使用该方法，可以让print（class）时打印出__str__()内返回的内容。
-```
+```python
 class Students():
   def __init__(self, name):
     self.name = name
@@ -307,7 +307,7 @@ print(Students('Mark'))
 ***\_\_iter__()***
 
 在类中加入\_\_iter__()方法，可以使用for循环迭代类，它返回一个可迭代对象。for循环会根据该对象的\_\_next__()方法循环到下一个值，直到遇到Stopteration错误。
-```
+```python
 #实现Fib类
 class Fib(object):
   def __init__(self):
@@ -326,7 +326,7 @@ for n in Fib():
 ***\_\_getitem__***
 
 在类中使用\_\_getitem__方法，可以将实现类似list或dict一样的下标读取内容的功能。
-```
+```python
 #上面的Fib()没有f[5]取第5个元素的功能，下面用__getitem__实现
 class Fib(object):
   def __getitem__(self, n):
@@ -351,7 +351,7 @@ class Fib(object):
 ***\_\_getattr__***
 
 \_\_getattr__方法可以定制类中没有的属性一旦被访问时的应对方法。
-```
+```python
 #比如Students类中只定义了name属性，而没有score属性，一旦score属性被访问，就会报错
 class Students(object):
   def __init__(self, name):
@@ -386,7 +386,7 @@ class Students(object):
 ***\_\_call__***
 
 \_\_call__可将实例名直接当成函数方法调用。
-```
+```python
 class Students(object):
   def __init__(self, name):
     self.__name = name
@@ -395,4 +395,50 @@ class Students(object):
 
 s = Students('Mark')
 s(90)
+```
+### IO编程
+#### 文件读写
+```python
+with open('path_to/file', 'rwab') as f:                   #r——读，w——写，a——追加写入不覆盖，b——二进制格式
+  f.read(size)                                            #一次性读取size大小的内容
+  f.readline()                                            #读取一行
+  f.readlines()                                           #一次性读取全部，按行返回list
+  f.write()
+```
+#### StringIO & BytesIO
+file-like-object, 数据可以写在文件中，也可以写在内存里。
+
+StringIO是在内存中读写str的，BytesIO是在内存中读写二进制数据的。
+```python
+from io import StringIO
+f1 = StringIO()
+f2 = StringIO('Hello!\nHi!\nBye!')
+f1.write('hello')
+print(f1.getvalue())                                      #getvalue()可以一直使用，而read之类函数使用后会指向末尾
+f2.readline()
+
+from io import BytesIO
+b = BytesIO(b'\xe4\xb8')
+b.read()
+b2 = BytesIO()
+b2.write('yes')
+print(b2.getvalue())
+```
+#### 序列化
+将内容、数据（list、dict等）序列化，以便于在网络或串口通信中传输。
+* python内置的pickle包
+```python
+import pickle
+pickle.dumps(list)                                        #直接将数据转换为bytes
+pickle.dump(dict, file)                                   #直接将数据转换为bytes并写入文件file
+pickle.loads(obj)                                         #将obj中bytes反序列化出对象
+pickle.load(f)                                            #直接从文件f中反序列化出对象
+```
+* JSON
+```python
+import json
+json.dumps(dict)                                          #将对象dict内容转变为json格式，返回json格式字符串
+json.dump(list, file)                                     #直接将对象list内容序列化为json写入file文件
+json.loads(str)                                           #从str字符串中反序列化出对象内容
+json.load(file)                                           #从file文件中反序列化对象
 ```
