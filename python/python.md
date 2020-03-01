@@ -442,3 +442,36 @@ json.dump(list, file)                                     #直接将对象list�
 json.loads(str)                                           #从str字符串中反序列化出对象内容
 json.load(file)                                           #从file文件中反序列化对象
 ```
+### 进程和线程
+#### 多进程
+* 使用multiprocessing模块中的Process类创建一个新的子进程。
+* 使用multiprocessing模块中的Queue或者Pipe实现进程之间的通信。
+* 使用multiprocessing模块中的Pool创建进程池，批量创建子进程。
+* 使用subprocess模块从外部启动程序创建子进程。
+***Note***: Process.join()方法等待子进程结束后再继续往下运行。
+
+***Note***: Pool.join()方法必须先调用close()方法，调用close()之后就不能再向Pool中添加新进程了，join()方法等待所有子进程执行完毕。
+
+使用multiprocessing模块使用示例见[multiprocess.py](./multiprocess.py)以及[multiprocess_pool.py](./multiprocess_pool.py)。
+
+subprocess模块：
+```python
+import subprocess
+
+print('$ nslookup www.python.org')
+r = subprocess.call(['nslookup', 'www.python.org'])
+print('Exit code:', r)
+```
+```python
+# 相当于执行命令nslookup后手动输入
+#set q=mx
+#python.org
+#exit
+import subprocess
+
+print('$ nslookup')
+p = subprocess.Popen(['nslookup'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+output, err = p.communicate(b'set q=mx\npython.org\nexit\n')
+print(output.decode('utf-8'))
+print('Exit code:', p.returncode)
+```
