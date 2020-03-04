@@ -475,3 +475,102 @@ output, err = p.communicate(b'set q=mx\npython.org\nexit\n')
 print(output.decode('utf-8'))
 print('Exit code:', p.returncode)
 ```
+#### 多线程
+* 使用threading模块，用法十分类似multiprocessing模块，threading.Thread()方法创建新的线程，th.start()方法开始线程，th.join()方法
+等待线程结束后再往下运行。
+
+* 使用threading.Lock()方法创建锁，锁可以确保同时只有一个线程在运行，防止了全局变量被多个线程交替执行时改乱。
+
+详细示例见[thread.py](./thread.py)。
+
+#### ThreadLocal
+ThreadLocal本身是全局变量，可以看成是全局dict，而ThreadLocal.xxx属性都是线程的局部变量。它给每个线程绑定了其特有的局部变量，这样线程执行时
+就带着这些绑定的变量运行，防止其他变量被修改，也省去了不断传入参数的麻烦。
+
+通常用法是给线程绑定HTTP请求，数据库链接，用户身份信息等，这样线程调用到的函数就方便访问这些资源了。
+
+更改了上一个thread.py示例，加入ThreadLocal，实现每个线程有每个线程的counter，以及各自的开始结束口令。详见[threadlocal.py](./threadlocal.py)。 
+#### 分布式进程
+***Note***: multiprocessing模块中的queue类和python直接内置的Queue.queue()是有区别的，multiprocessing中的queue是专门为进程间通信设计的
+队列，可以在进程间共享数据；而内置的queue只是单纯的队列，不能在进程间共享。
+
+分布式进程是主进程通过网络给多个机器分发任务，并接收返回的处理结果。队列Queue中存放着要分发的任务，另一个Queue中存放返回的出来结果。
+通过multiprocessing模块的managers模块来处理Queue。
+```python
+# 分发任务的主进程
+# task_master.py
+
+import random, time, queue
+from multiprocessing.managers import BaseManager
+
+# 发送任务的队列:
+task_queue = queue.Queue()
+# 接收结果的队列:
+result_queue = queue.Queue()
+
+# 从BaseManager继承的QueueManager:
+class QueueManager(BaseManager):
+    pass
+
+# 把两个Queue都注册到网络上, callable参数关联了Queue对象:
+QueueManager.register('get_task_queue', callable=lambda: task_queue)
+QueueManager.register('get_result_queue', callable=lambda: result_queue)
+# 绑定端口5000, 设置验证码'abc':
+manager = QueueManager(address=('', 5000), authkey=b'abc')
+# 启动Queue:
+manager.start()
+# 获得通过网络访问的Queue对象:
+task = manager.get_task_queue()
+result = manager.get_result_queue()
+# 放几个任务进去:
+for i in range(10):
+    n = random.randint(0, 10000)
+    print('Put task %d...' % n)
+    task.put(n)
+# 从result队列读取结果:
+print('Try get results...')
+for i in range(10):
+    r = result.get(timeout=10)
+    print('Result: %s' % r)
+# 关闭:
+manager.shutdown()
+print('master exit.')
+```
+```python
+# 处理任务的程序，可以在其他机器上，也可以在本机
+# task_worker.py
+
+import time, sys, queue
+from multiprocessing.managers import BaseManager
+
+# 创建类似的QueueManager:
+class QueueManager(BaseManager):
+    pass
+
+# 由于这个QueueManager只从网络上获取Queue，所以注册时只提供名字:
+QueueManager.register('get_task_queue')
+QueueManager.register('get_result_queue')
+
+# 连接到服务器，也就是运行task_master.py的机器:
+server_addr = '127.0.0.1'
+print('Connect to server %s...' % server_addr)
+# 端口和验证码注意保持与task_master.py设置的完全一致:
+m = QueueManager(address=(server_addr, 5000), authkey=b'abc')
+# 从网络连接:
+m.connect()
+# 获取Queue的对象:
+task = m.get_task_queue()
+result = m.get_result_queue()
+# 从task队列取任务,并把结果写入result队列:
+for i in range(10):
+    try:
+        n = task.get(timeout=1)
+        print('run task %d * %d...' % (n, n))
+        r = '%d * %d = %d' % (n, n, n*n)
+        time.sleep(1)
+        result.put(r)
+    except Queue.Empty:
+        print('task queue is empty.')
+# 处理结束:
+print('worker exit.')
+```
