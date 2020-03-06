@@ -574,3 +574,27 @@ for i in range(10):
 # 处理结束:
 print('worker exit.')
 ```
+### 正则表达式
+* \d          数字
+* \w          字母或数字
+* .           任意字符
+* \s          空格（包括Tab）
+python 使用re模块来处理正则表达式。
+```python
+import re
+re.match(r'^\d{3}\-\d{3,8}$', '010-12345')
+#匹配成功则返回Match对象，否则返回None
+#使用r就可以放心得键入正则表达式，不需再考虑python自身的转义字符了
+
+re.split(r'[\s\,]+', 'a,b, c   d')
+#split是切割方法
+
+m = re.match(r'^(\d{3})-(\d{3,8})$', '010-12345')
+m.group(0)                                            #group(0)代表整个字符串
+m.group(1)                                            #group(1)开始代表后续分组的字符串
+m.groups()                                            #返回所有分组组成的tuple
+
+#对于要重复使用的正则表达式，可以预先编译以节省运行时间
+x = re.compile(r'^(\d{3})-(\d{3,8})$')
+x.match('010-12345').groups()
+```
