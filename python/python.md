@@ -598,3 +598,79 @@ m.groups()                                            #返回所有分组组成�
 x = re.compile(r'^(\d{3})-(\d{3,8})$')
 x.match('010-12345').groups()
 ```
+
+### 异步IO
+CPU计算速度一般快于IO读写速度，同步IO一旦遇到IO时便阻塞，等待IO读写结束才继续执行下面的程序；也可以使用多线程或多进程
+来解决IO阻塞的问题，但大规模使用多线程或多线程，时间会浪费在线程\进程的切换上，效率也不高。异步IO解决了在一个线程中IO
+阻塞的问题，遇到IO读写后直接执行下面的程序，直到IO读写完成返回结果再处理IO结果。
+#### 预备知识
+* 生成器generator的方法next()和send()
+```python
+#next()对生成器单步迭代
+#send()与next()差不多，差别在于：send()必须带参数
+#send()的参数是None时，等价于next()
+#send()的参数不为None时，将参数直接传给了generator中yield的返回结果值,send方法会首先把上一次挂起的yield语句的返回值通过参数设定
+#在一个生成器对象没有执行next方法之前，由于没有yield语句被挂起，所以执行send方法会报错
+def gen():
+  value = yield 1
+  value = yield value
+
+g = gen()
+print(next(g))                      #打印出了1
+print(g.send(2))                    #send(2)先将参数2传给了上次挂起的yield 1 的返回值，再执行下一句yield value, 打印2
+print(g.send(3))                    #send(3)将参数3传给yield value 的返回值 value，继续运行发现gen（）结束，抛出StopIteration异常
+
+#若直接send（2），会报错
+g = gen()
+print(g.send(2))                    #TypeError: can't send non-None value to a just-started generator
+```
+* yield from
+yield from 后面必须接一个可迭代对象iterable。
+```python
+#yield 与 yield from区别
+def yield_func(list):
+  yield list
+
+def yield_from_func(list):
+  yield from list
+
+list = ['a','b','c']
+yield_gen = yield_func(list)
+for i in yield_gen:
+  print(i)                                      #打印出了['a','b','c']
+
+yield_from_gen = yield_from_func(list)
+for i in yield_from_gen:
+  print(i)                                      #打印出了a, b, c
+
+#yield只是将后面的对象抛出，而yield from将后面iterable对象每一个元素依次抛出
+```
+#### 协程
+协程Coroutine,是一种子程序，其内部可以中断，中断后执行其他子程序，适时再回来继续执行。
+
+python通过生成器generator实现协程，内部用yield中断程序，外部用next()或send来返回继续执行。
+```python
+def consumer():
+  ret = ''
+  while True:
+    n = yield ret
+    if not n:
+      return
+    print('CONSUMER Consuming %s...' %n)
+    ret = '200 OK'
+
+def produce(con):
+  con.send(None)
+  n = 0
+  while n < 5:
+    n += 1
+    print('PRODUCER Producing %s...' %n)
+    r = con.send(n)
+    print('PRODUCER Consumer return %s' %r)
+  con.close()                                       #最后一定要关掉consumer
+
+con = consumer()
+produce(con)
+```
+
+***asyncio***是python内置的异步IO模块。
